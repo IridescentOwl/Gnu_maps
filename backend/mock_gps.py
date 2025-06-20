@@ -1,32 +1,40 @@
 from mapbox import Directions
 from dotenv import load_dotenv
 import os
+import json
 
-# Load token from .env
 load_dotenv()
 MAPBOX_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN")
 
-# Initialize Directions service
 directions_service = Directions(access_token=MAPBOX_TOKEN)
 
-# Example: From Delhi (India Gate) to Connaught Place
-origin = (77.2295, 28.6129)  # (longitude, latitude)
-destination = (77.2195, 28.6315)
+def process_coords(coords_file = 'coords.json', output = 'route.json'):
+    with open(coords_file, 'r') as f:
+        data = json.load(f)
 
-# Request route
-response = directions_service.directions(
-    [origin, destination],
-    profile='mapbox/driving',
-    steps=True,
-    geometries='geojson'  # gets route as a GeoJSON LineString
-)
+    origin = data["start"]["geometry"]["coordinates"]
+    destination = data["destination"]["geometry"]["coordinates"]
 
-# Check response
-if response.status_code == 200:
-    data = response.json()
-    route = data['routes'][0]['geometry']['coordinates']
-    print("Fetched route with", len(route), "points.")
-else:
-    print("Error:", response.status_code, response.text)
+    print("Origin:", origin)
+    print("Destination:", destination)
 
-print(route)
+    response = directions_service.directions(
+        [origin, destination],  
+        profile='mapbox/driving',
+        steps=True,
+        geometries='geojson'
+    )
+
+    if response.status_code == 200:
+        result = response.json()
+        route = result['routes'][0]['geometry']['coordinates']
+
+        route_data = {
+            "route": route
+        }
+
+        with open(output, 'w') as f:
+            json.dump(route_data, f, indent = 4)
+    else:
+        print("Error:", response.status_code, response.text)
+        raise Exception(f"Mapbox API error {response.status_code}: {response.text}")

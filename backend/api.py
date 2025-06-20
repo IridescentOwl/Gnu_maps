@@ -22,6 +22,11 @@ class startCoords(BaseModel):
     startLat: float
     startLong: float
 
+class DeliveryInput(BaseModel):
+    features: features
+    destinationCoords: destinationCoords
+    startCoords: startCoords
+
 app = FastAPI()
 model = joblib.load('model.joblib')
 
@@ -30,28 +35,40 @@ async def root():
     return {"message": "Welcome to the delivery service API!"}
 
 @app.post("/start-delivery")
-async def start_delivery(
-    features: features,
-    destinationCoords: destinationCoords,
-    startCoords: startCoords
-):
-    features = {
-        "features": features.model_dump(),
+async def start_delivery(data: DeliveryInput):
+    features_dict = {
+        "features": data.features.model_dump(),
     }
 
     coords = {
-        "destinationCoords": destinationCoords.model_dump(),
-        "startCoords": startCoords.model_dump()
+        "start": {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [data.startCoords.startLong, data.startCoords.startLat]
+            },
+            "properties": {}
+        },
+        "destination": {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [data.destinationCoords.destLong, data.destinationCoords.destLat]
+            },
+            "properties": {}
+        }
     }
 
     with open('features.json', 'w') as f:
-        json.dump(features, f, indent = 4)
+        json.dump(features_dict, f, indent=4)
 
-    with open('route.json', 'w') as f:
-        json.dump(coords, f, indent = 4)
+    with open('coords.json', 'w') as f:
+        json.dump(coords, f, indent=4)
 
     try:
         route_data = process_coords('coords.json', 'route.json')
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+    return {"status": "Route processed successfully"}
 
