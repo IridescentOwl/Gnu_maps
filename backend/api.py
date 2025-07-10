@@ -6,6 +6,11 @@ import joblib
 from mock_gps import process_coords
 from osrmCoordsToDistances import coordsToDistance
 
+currentRoute = []
+currentStepIndex = 0
+currentFeatures = {}
+currentDestinationCoords = []
+
 class features(BaseModel):
     Weather_conditions: float
     Road_traffic_density: float
@@ -36,9 +41,12 @@ async def root():
 
 @app.post("/start-delivery")
 async def start_delivery(data: DeliveryInput):
-    features_dict = {
-        "features": data.features.model_dump(),
-    }
+    global currentRoute, currentStepIndex, currentFeatures, currentDestinationCoords
+
+    currentFeatures = data.features.model_dump()
+    currentDestinationCoords = [data.destinationCoords.destLong, data.destinationCoords.destLat]
+
+    features_dict = {"features" : currentFeatures}
 
     coords = {
         "start": {
@@ -59,7 +67,7 @@ async def start_delivery(data: DeliveryInput):
         }
     }
 
-    destination_Coords = [data.destinationCoords.destLong, data.destinationCoords.destLat]
+
 
     with open('features.json', 'w') as f:
         json.dump(features_dict, f, indent=4)
@@ -68,16 +76,22 @@ async def start_delivery(data: DeliveryInput):
         json.dump(coords, f, indent=4)
 
     try:
-        route_data = process_coords('coords.json', 'route.json')
+        process_coords('coords.json', 'route.json')
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
     try:
         with open('route.json', 'r') as f:
             routes = json.load(f)
+            currentRoute = routes["route"]
+            currentStepIndex = 0
+    except:
+        raise HTTPException(status_code=500, detail=f"Error reading route.json: {e}")
 
-        for currentCoord in routes["routes"]:
-            try:
-                currentDistance = coordsToDistance(currentCoord, destination_Coords)
+    return {
+        "status": "Route and features cached and saved",
+        "route_length": len(currentRoute)
+    }
 
-    except
+
+
