@@ -4,8 +4,8 @@ OSRM_URL = "https://router.project-osrm.org/route/v1/driving/{},{};{},{}?overvie
 
 def coordsToDistance(current_coord, destination_coord):
 
-    current_lat,current_long = current_coord[0], current_coord[1]
-    destination_lat, destination_long = destination_coord[0], destination_coord[1]
+    current_long, current_lat = current_coord
+    destination_long, destination_lat = destination_coord
 
     url = OSRM_URL.format(current_long, current_lat, destination_long, destination_lat)
 
