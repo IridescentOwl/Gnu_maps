@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query, Path, HTTPException, status
 from typing import Optional
 from pydantic import BaseModel
+import pandas as pd
 import json
 import joblib
 from mock_gps import process_coords
@@ -92,6 +93,34 @@ async def start_delivery(data: DeliveryInput):
         "status": "Route and features cached and saved",
         "route_length": len(currentRoute)
     }
+
+@app.get("/predict-eta")
+async def predict_eta(advance: bool = False):
+    global currentRoute, currentStepIndex, currentFeatures, currentDestinationCoords
+
+    if(currentStepIndex >= len(currentRoute)):
+        raise HTTPException(status_code=400, detail="Rider has reached the Destination!")
+
+    routePoint = currentRoute[currentStepIndex]
+    distance = coordsToDistance(routePoint, currentDestinationCoords)
+
+    modelInput = currentFeatures.copy()
+    modelInput["distance_km"] = distance / 1000
+
+    df = pd.DataFrame([modelInput])
+
+    eta = model.predict(df)
+
+    if advance:
+        currentStepIndex += 1
+
+    return {
+        "step_index": currentStepIndex,
+        "current_coord": routePoint,
+        "distance_meters": int(distance),
+        "eta_prediction": float(eta[0])
+    }
+
 
 
 
