@@ -59,6 +59,8 @@ async def start_delivery(data: DeliveryInput):
         }
     }
 
+    destination_Coords = [data.destinationCoords.destLong, data.destinationCoords.destLat]
+
     with open('features.json', 'w') as f:
         json.dump(features_dict, f, indent=4)
 
@@ -70,5 +72,12 @@ async def start_delivery(data: DeliveryInput):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    return {"status": "Route processed successfully"}
+    try:
+        with open('route.json', 'r') as f:
+            routes = json.load(f)
 
+        for currentCoord in routes["routes"]:
+            try:
+                currentDistance = coordsToDistance(currentCoord, destination_Coords)
+
+    except
