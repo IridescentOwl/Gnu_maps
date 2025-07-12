@@ -68,8 +68,6 @@ async def start_delivery(data: DeliveryInput):
         }
     }
 
-
-
     with open('features.json', 'w') as f:
         json.dump(features_dict, f, indent=4)
 
