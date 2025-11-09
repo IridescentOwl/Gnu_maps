@@ -6,6 +6,9 @@ import json
 load_dotenv()
 MAPBOX_TOKEN = os.getenv("MAPBOX_ACCESS_TOKEN")
 
+if not MAPBOX_TOKEN:
+    raise Exception("MAPBOX_ACCESS_TOKEN not found in .env file")
+
 directions_service = Directions(access_token=MAPBOX_TOKEN)
 
 def process_coords(coords_file = 'coords.json', output = 'route.json'):

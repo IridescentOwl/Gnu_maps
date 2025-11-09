@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Query, Path, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from pydantic import BaseModel
 import pandas as pd
@@ -34,6 +35,19 @@ class DeliveryInput(BaseModel):
     startCoords: startCoords
 
 app = FastAPI()
+
+# For development, allow all origins.
+# For production, you should restrict this to your frontend's domain.
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 model = joblib.load('model.joblib')
 
 @app.get("/")
