@@ -7,7 +7,7 @@
 **/.ipynb_checkpoints/
 **/__pycache__/
 *.pyc
-gnu_maps-frontend/node_modules
-gnu_maps-frontend/package-lock.json
+*node_modules/
+*package-lock.json
 backend/.env.local
 backend/.env
